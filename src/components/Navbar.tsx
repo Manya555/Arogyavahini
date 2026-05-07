@@ -34,9 +34,9 @@ export const Navbar = () => {
 
   const navLinks = [
     { to: '/', label: 'Home' },
+    { to: '/emergency', label: 'Emergency' },
     { to: '/ambulance-booking', label: 'Book Ambulance' },
     { to: '/hospitals', label: 'Hospitals' },
-    { to: '/admin', label: 'Admin' },
   ];
 
   return (
@@ -57,13 +57,10 @@ export const Navbar = () => {
                 </div>
               </div>
               <div className="flex flex-col leading-none">
-                <div className="flex items-center gap-2">
-                   <span className="text-xl lg:text-2xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
-                     Arogya<span className="text-red-600 italic">Vahini</span>
-                   </span>
-                   <div className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[8px] font-black italic tracking-widest hidden sm:block">PRO</div>
-                </div>
-                <span className="text-[8px] font-black tracking-[0.4em] text-[var(--text-muted)] uppercase mt-1.5 opacity-60 hidden sm:block">MISSION CONTROL CLUSTER</span>
+                <span className="text-xl lg:text-2xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
+                  Arogya<span className="text-red-600 italic">Vahini</span>
+                </span>
+                <span className="text-[8px] font-black tracking-[0.4em] text-[var(--text-muted)] uppercase mt-1.5 opacity-60 hidden sm:block">MEDICAL EMERGENCY RESPONSE</span>
               </div>
             </Link>
 

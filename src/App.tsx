@@ -8,7 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation 
 import { SimulationProvider } from './context/SimulationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, LanguageProvider, useLanguage, useTheme } from './context/UIContext';
-import { Heart, Activity, ShieldCheck, MapPin, Truck, Hospital, UserCog, LogOut, Bell, Menu, X, Globe, Moon, Sun, TrendingUp, LayoutDashboard } from 'lucide-react';
+import { Heart, Activity, ShieldCheck, MapPin, Truck, Hospital, UserCog, LogOut, Bell, Menu, X, Globe, Moon, Sun, TrendingUp, LayoutDashboard, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import LandingPage from './pages/LandingPage';
@@ -44,9 +44,10 @@ const Sidebar = () => {
 
   const navItems = [
     { to: "/", icon: Heart, label: 'Home', id: 'home' },
+    { to: "/emergency", icon: Activity, label: 'Emergency', id: 'emergency' },
     { to: "/ambulance-booking", icon: Truck, label: 'Book Ambulance', id: 'ambulance' },
     { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
-    { to: "/admin", icon: ShieldCheck, label: 'Admin Portal', id: 'admin' },
+    ...(user?.role === 'Driver' ? [{ to: "/driver-portal", icon: LayoutDashboard, label: 'Driver Portal', id: 'driver' }] : []),
   ];
 
   return (
@@ -142,7 +143,9 @@ export default function App() {
                    <main className="pt-20 pb-28 lg:pb-12 px-4 lg:px-0">
                      <Routes>
                        <Route path="/" element={<LandingPage />} />
+                       <Route path="/emergency" element={<BookingPage />} />
                        <Route path="/ambulance-booking" element={<BookingPage />} />
+                       <Route path="/hospitals" element={<HospitalListingsPage />} />
                        <Route path="/tracking/:id" element={<TrackingPage />} />
                        
                        {/* Logins */}
@@ -150,13 +153,14 @@ export default function App() {
                        <Route path="/internal/hospital-login" element={<LoginPages type="hospital" />} />
                        <Route path="/internal/admin-login" element={<LoginPages type="admin" />} />
 
-                       {/* Dashboards */}
-                       <Route path="/driver" element={
+                       {/* Driver Portal */}
+                       <Route path="/driver-portal" element={
                          <ProtectedRoute roles={['Driver']}>
                            <DriverDashboard />
                          </ProtectedRoute>
                        } />
-                       <Route path="/hospitals" element={<HospitalListingsPage />} />
+                       
+                       {/* Admin Portal - Hidden from sidebar, protected */}
                        <Route path="/admin" element={
                          <ProtectedRoute roles={['Admin']}>
                            <AdminDashboard />
