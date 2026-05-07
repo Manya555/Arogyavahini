@@ -225,15 +225,19 @@ export const Navbar = () => {
 
               <div className="space-y-3">
                 {[
-                  { role: 'Patient' as const, color: 'emerald' },
-                  { role: 'Driver' as const, color: 'blue' },
-                  { role: 'Hospital' as const, color: 'red' },
-                  { role: 'Admin' as const, color: 'purple' }
+                  { role: 'Patient', color: 'emerald', icon: '👤' },
+                  { role: 'Driver', color: 'blue', icon: '🚑' },
+                  { role: 'Hospital', color: 'red', icon: '🏥' },
+                  { role: 'Admin', color: 'purple', icon: '⚙️' }
                 ].map(({ role, color }) => (
                   <button
                     key={role}
                     onClick={() => {
-                      login(role, `user-${Date.now()}`, `${role} User`);
+                      login({ 
+                        id: `user-${Date.now()}`,
+                        name: `${role} User`,
+                        role: role as any
+                      });
                       setIsLoginOpen(false);
                     }}
                     className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-white transition-all border-2 ${
