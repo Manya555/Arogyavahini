@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #ef4444; /* Pulse Red */
+  --color-brand-bg: var(--bg-primary);
+  --color-brand-card: var(--bg-secondary);
+  --color-brand-border: var(--border-color);
+  
+  --font-sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  /* =========
+     LIGHT THEME (premium, healthcare-oriented, futuristic)
+     ========= */
+  --bg-primary: #f6f8fc;          /* soft, not pure white */
+  --bg-secondary: #eef2f7;        /* section bg */
+  --card-bg: rgba(255, 255, 255, 0.78);
+  --card-bg-solid: #ffffff;
+  --sidebar-bg: #f0f4f9;
+  --hud-bg: rgba(255, 255, 255, 0.72);
+
+  --border-color: rgba(15, 23, 42, 0.10);
+  --border-strong: rgba(15, 23, 42, 0.16);
+
+  --text-primary: #0b1220;
+  --text-secondary: #3b4a5c;
+  --text-muted: #64748b;
+
+  --icon-primary: #1f2a3a;
+  --icon-muted: #516274;
+
+  --hover-bg: rgba(15, 23, 42, 0.045);
+  --active-bg: rgba(220, 38, 38, 0.10);
+
+  /* Accents (muted, non-neon in light mode) */
+  --accent-red: #dc2626;
+  --accent-red-2: #b91c1c;
+  --accent-emerald: #059669;
+  --accent-blue: #2563eb;
+
+  /* Glow / shadows tuned for light mode */
+  --shadow-color: rgba(15, 23, 42, 0.10);
+  --shadow-color-strong: rgba(15, 23, 42, 0.14);
+  --glow-red: rgba(220, 38, 38, 0.22);
+  --glow-emerald: rgba(16, 185, 129, 0.18);
+
+  --tooltip-bg: rgba(15, 23, 42, 0.92);
+  --tooltip-text: #f8fafc;
+  --focus-ring: rgba(37, 99, 235, 0.35);
+}
+
+.dark {
+  /* =========
+     DARK THEME (keep your existing aesthetic)
+     ========= */
+  --bg-primary: #050608;
+  --bg-secondary: #0a0c10;
+  --card-bg: rgba(0, 0, 0, 0.38);
+  --card-bg-solid: #0a0c10;
+  --sidebar-bg: #010204;
+  --hud-bg: rgba(0, 0, 0, 0.48);
+
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.10);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: rgba(148, 163, 184, 0.75);
+
+  --icon-primary: rgba(248, 250, 252, 0.95);
+  --icon-muted: rgba(148, 163, 184, 0.9);
+
+  --hover-bg: rgba(255, 255, 255, 0.06);
+  --active-bg: rgba(239, 68, 68, 0.18);
+
+  --accent-red: #ff4d4d;
+  --accent-red-2: #ff2e2e;
+  --accent-emerald: #10b981;
+  --accent-blue: #60a5fa;
+
+  --shadow-color: rgba(0, 0, 0, 0.50);
+  --shadow-color-strong: rgba(0, 0, 0, 0.65);
+  --glow-red: rgba(239, 68, 68, 0.36);
+  --glow-emerald: rgba(16, 185, 129, 0.25);
+
+  --tooltip-bg: rgba(2, 6, 23, 0.92);
+  --tooltip-text: #f8fafc;
+  --focus-ring: rgba(96, 165, 250, 0.35);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased;
+    @apply transition-colors duration-300;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  :where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+.glass-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    0 18px 44px -26px var(--shadow-color-strong),
+    0 10px 24px -16px var(--shadow-color);
+  backdrop-filter: blur(24px);
+}
+
+.btn-primary {
+  @apply px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all italic;
+  @apply flex items-center justify-center gap-3;
+  @apply bg-[var(--accent-red)] text-white border border-red-500/25;
+  box-shadow: 0 18px 40px -24px var(--glow-red);
+}
+
+.btn-primary:hover {
+  background: var(--accent-red-2);
+  border-color: rgba(220, 38, 38, 0.40);
+  box-shadow: 0 22px 48px -28px var(--glow-red);
+}
+
+.btn-secondary {
+  @apply px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all italic;
+  @apply flex items-center justify-center gap-3;
+  @apply bg-[var(--card-bg-solid)] border border-[var(--border-color)] text-[var(--text-secondary)];
+}
+
+.btn-secondary:hover {
+  background: var(--hover-bg);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.technical-grid {
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .technical-grid {
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-white/10 rounded-full hover:bg-slate-400 dark:hover:bg-white/20 transition-colors;
+}
+
+/* Theme transition helper (used by UIContext toggle) */
+.theme-transition *,
+.theme-transition {
+  transition-property: color, background-color, border-color, box-shadow, opacity, filter, transform;
+  transition-duration: 260ms;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pulse-red-glow {
+  box-shadow:
+    0 18px 44px -28px var(--glow-red),
+    0 0 0 1px rgba(220, 38, 38, 0.12);
+}
+
+.emerald-glow {
+  box-shadow:
+    0 18px 44px -28px var(--glow-emerald),
+    0 0 0 1px rgba(16, 185, 129, 0.12);
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.italic-heavy {
+  font-style: italic;
+  font-weight: 900;
+}
