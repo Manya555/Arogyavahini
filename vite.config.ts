@@ -19,6 +19,7 @@ export default defineConfig(({mode}) => {
       port: 3000,
       host: true,
       hmr: true,
+      open: false,
     },
     build: {
       outDir: 'dist',
