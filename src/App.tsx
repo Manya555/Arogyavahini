@@ -44,7 +44,7 @@ const Sidebar = () => {
 
   const navItems = [
     { to: "/", icon: Heart, label: 'Home', id: 'home' },
-    { to: "/emergency", icon: Activity, label: 'Emergency', id: 'emergency' },
+    { to: "/emergency", icon: Activity, label: 'Live Ambulance Map', id: 'emergency' },
     { to: "/ambulance-booking", icon: Truck, label: 'Book Ambulance', id: 'ambulance' },
     { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
     ...(user?.role === 'Driver' ? [{ to: "/driver-portal", icon: LayoutDashboard, label: 'Driver Portal', id: 'driver' }] : []),
@@ -55,7 +55,7 @@ const Sidebar = () => {
       {/* Desktop Sidebar */}
       <div className="fixed left-0 top-0 bottom-0 w-20 bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] z-[60] hidden lg:flex flex-col items-center py-10 gap-12">
         <Link to="/" className="w-12 h-12 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/25 group transition-all hover:bg-red-600/15">
-          <div className="w-3 h-3 bg-red-600 rounded-full animate-ping group-hover:scale-150 transition-transform" />
+          <Heart className="w-6 h-6 text-red-600 fill-red-600" />
         </Link>
         
         <div className="flex-1 flex flex-col items-center gap-10">
@@ -96,7 +96,6 @@ const Sidebar = () => {
             className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_15px_var(--glow-emerald)]" 
             title="System Online" 
           />
-          <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest vertical-text py-6 select-none opacity-40">AXON_SECURE_NODE</div>
         </div>
       </div>
 
@@ -146,6 +145,7 @@ export default function App() {
                        <Route path="/emergency" element={<BookingPage />} />
                        <Route path="/ambulance-booking" element={<BookingPage />} />
                        <Route path="/hospitals" element={<HospitalListingsPage />} />
+                       <Route path="/hospitals/:id" element={<HospitalDashboard />} />
                        <Route path="/tracking/:id" element={<TrackingPage />} />
                        
                        {/* Logins */}

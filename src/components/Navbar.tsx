@@ -19,10 +19,11 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage, useTheme } from '../context/UIContext';
 
 export const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, login } = useAuth();
   const { t, setLanguage, language } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
@@ -121,11 +122,14 @@ export const Navbar = () => {
             </div>
 
             {!user ? (
-               <Link to="/ambulance-booking" className="btn-primary min-w-[140px] px-6 lg:px-8">
+               <button 
+                 onClick={() => setIsLoginOpen(!isLoginOpen)}
+                 className="btn-primary min-w-[140px] px-6 lg:px-8"
+               >
                   <Bell className="w-4 h-4 animate-pulse" />
-                  <span className="hidden sm:inline">SOS Protocol</span>
-                  <span className="sm:hidden">SOS</span>
-               </Link>
+                  <span className="hidden sm:inline">Login</span>
+                  <span className="sm:hidden">Login</span>
+               </button>
             ) : (
                 <div className="flex items-center gap-4">
                   <div className="hidden sm:flex flex-col items-end">
@@ -193,6 +197,68 @@ export const Navbar = () => {
                 Initiate SOS Protocol
               </Link>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Login Modal */}
+      <AnimatePresence>
+        {isLoginOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsLoginOpen(false)}
+            className="fixed inset-0 bg-black/30 z-[200] flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-3xl p-8 max-w-sm w-full shadow-2xl"
+            >
+              <div className="mb-8">
+                <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase italic tracking-tight">Login</h2>
+                <p className="text-sm text-[var(--text-muted)] mt-2">Select your role to continue</p>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  { role: 'Patient', color: 'emerald', icon: '👤' },
+                  { role: 'Driver', color: 'blue', icon: '🚑' },
+                  { role: 'Hospital', color: 'red', icon: '🏥' },
+                  { role: 'Admin', color: 'purple', icon: '⚙️' }
+                ].map(({ role, color }) => (
+                  <button
+                    key={role}
+                    onClick={() => {
+                      login({ 
+                        id: `user-${Date.now()}`,
+                        name: `${role} User`,
+                        role: role as any
+                      });
+                      setIsLoginOpen(false);
+                    }}
+                    className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-white transition-all border-2 ${
+                      color === 'emerald' ? 'bg-emerald-600 border-emerald-500 hover:bg-emerald-700' :
+                      color === 'blue' ? 'bg-blue-600 border-blue-500 hover:bg-blue-700' :
+                      color === 'red' ? 'bg-red-600 border-red-500 hover:bg-red-700' :
+                      'bg-purple-600 border-purple-500 hover:bg-purple-700'
+                    }`}
+                  >
+                    Login as {role}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setIsLoginOpen(false)}
+                className="w-full mt-6 py-3 text-[var(--text-muted)] font-bold uppercase tracking-widest text-sm hover:text-[var(--text-primary)] transition-colors"
+              >
+                Cancel
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

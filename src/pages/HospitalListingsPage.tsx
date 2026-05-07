@@ -4,9 +4,10 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useSimulation } from '../context/SimulationContext';
 import { motion } from 'motion/react';
-import { Hospital, Bed, Users, MapPin, Phone, Star, Filter, AlertCircle, Heart, TrendingUp } from 'lucide-react';
+import { Hospital, Bed, Users, MapPin, Phone, Star, Filter, AlertCircle, Heart, TrendingUp, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/UIContext';
 
 export default function HospitalListingsPage() {
@@ -130,13 +131,17 @@ export default function HospitalListingsPage() {
         {/* Hospital Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredHospitals.map((hospital, idx) => (
-            <motion.div
+            <Link 
               key={hospital.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className="glass-panel rounded-[2rem] p-6 border-emerald-600/10 hover:border-emerald-600/30 transition-all group overflow-hidden"
+              to={`/hospitals/${hospital.id}`}
+              className="no-underline"
             >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="glass-panel rounded-[2rem] p-6 border-emerald-600/10 hover:border-emerald-600/40 transition-all group overflow-hidden h-full cursor-pointer transform hover:scale-105 hover:shadow-xl"
+              >
               {/* Header */}
               <div className="mb-6">
                 <div className="flex items-start justify-between mb-3">
@@ -217,11 +222,12 @@ export default function HospitalListingsPage() {
                   <Users className="w-4 h-4 text-emerald-600" />
                   <span className="font-bold">{hospital.specializations.length} Specialties</span>
                 </div>
-                <button className="px-3 py-2 bg-emerald-600/10 text-emerald-600 rounded-lg font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all text-[8px]">
-                  View Details
-                </button>
+                <div className="flex items-center gap-1 px-3 py-2 bg-emerald-600/10 text-emerald-600 rounded-lg font-black uppercase tracking-widest group-hover:bg-emerald-600 group-hover:text-white transition-all text-[8px]">
+                  View <ChevronRight className="w-3 h-3" />
+                </div>
               </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           ))}
         </div>
 
