@@ -69,7 +69,7 @@ export default function LandingPage() {
               {/* CTA Cluster */}
               <div className="flex flex-col sm:flex-row gap-6 mb-16">
                 <Link
-                  to="/booking"
+                  to="/ambulance-booking"
                   className="btn-primary group !px-12 !py-6 !text-xs"
                 >
                   <Phone className="w-6 h-6 group-hover:rotate-12 transition-transform" />

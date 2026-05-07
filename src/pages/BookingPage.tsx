@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimulation, Severity } from '../context/SimulationContext';
 import { motion } from 'motion/react';
-import { AlertCircle, MapPin, User, Phone, Clipboard, Activity, ChevronRight, Info } from 'lucide-react';
+import { AlertCircle, MapPin, User, Phone, Clipboard, Activity, ChevronRight, Info, Truck, Clock, MapPinIcon, Users } from 'lucide-react';
 import { useLanguage } from '../context/UIContext';
 import { SimulatedGridMap } from '../components/SimulatedGridMap';
 
 export default function BookingPage() {
   const navigate = useNavigate();
-  const { createEmergency, hospitals } = useSimulation();
+  const { createEmergency, ambulances } = useSimulation();
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
     patientName: '',
@@ -28,9 +28,43 @@ export default function BookingPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sortBy, setSortBy] = useState<'distance' | 'availability'>('distance');
 
   // Mock auto-location for simulation
   const mockPickupLocation = { lat: 12.9716 + (Math.random() - 0.5) * 0.1, lng: 77.5946 + (Math.random() - 0.5) * 0.1 };
+
+  // Calculate distances and sort ambulances
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lng1 - lng2, 2)) * 111; // Convert to approximate km
+  };
+
+  const nearbyAmbulances = useMemo(() => {
+    const withDistance = ambulances.map(amb => ({
+      ...amb,
+      distance: calculateDistance(
+        mockPickupLocation.lat,
+        mockPickupLocation.lng,
+        amb.coords.lat,
+        amb.coords.lng
+      ),
+      eta: Math.ceil((calculateDistance(
+        mockPickupLocation.lat,
+        mockPickupLocation.lng,
+        amb.coords.lat,
+        amb.coords.lng
+      ) / 40) * 60) // Assume 40 km/h average speed
+    }));
+
+    if (sortBy === 'distance') {
+      return withDistance.sort((a, b) => a.distance - b.distance);
+    } else {
+      return withDistance.sort((a, b) => {
+        const aAvailable = a.status === 'Available' ? 0 : 1;
+        const bAvailable = b.status === 'Available' ? 0 : 1;
+        return aAvailable - bAvailable || a.distance - b.distance;
+      });
+    }
+  }, [sortBy, mockPickupLocation.lat, mockPickupLocation.lng]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,40 +85,41 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] py-16 px-4 transition-colors duration-300 technical-grid">
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-panel rounded-[3rem] overflow-hidden border-red-600/20"
-        >
-          {/* Header Section */}
-          <div className="p-12 border-b border-[var(--border-color)] bg-red-600/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-              <Activity className="w-64 h-64 text-red-600" />
-            </div>
-            
-            <div className="flex items-center gap-8 relative z-10">
-              <div className="w-20 h-20 bg-red-600 rounded-[1.5rem] flex items-center justify-center text-white shadow-[0_0_40px_rgba(239,68,68,0.4)] pulse-red-glow">
-                <AlertCircle className="w-10 h-10 animate-pulse" />
+    <div className="min-h-screen bg-[var(--bg-primary)] py-12 px-4 transition-colors duration-300 technical-grid">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left: Form Panel - 2 columns */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-2 glass-panel rounded-[2rem] overflow-hidden border-red-600/20"
+          >
+            {/* Header Section */}
+            <div className="p-8 border-b border-[var(--border-color)] bg-red-600/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                <Activity className="w-40 h-40 text-red-600" />
               </div>
-              <div>
-                <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic">{t('booking.title')}</h1>
-                <p className="text-xs font-black text-red-600 uppercase tracking-[0.4em] mt-2 leading-none">High Priority Intercept Protocol Activated</p>
+              
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-16 h-16 bg-red-600 rounded-[1.2rem] flex items-center justify-center text-white shadow-[0_0_40px_rgba(239,68,68,0.4)] pulse-red-glow">
+                  <AlertCircle className="w-8 h-8 animate-pulse" />
+                </div>
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-black text-[var(--text-primary)] tracking-tighter uppercase italic">{t('booking.title')}</h1>
+                  <p className="text-[10px] font-black text-red-600 uppercase tracking-[0.2em] mt-1 leading-none">Ambulance Booking System</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <form onSubmit={handleSubmit} className="p-12 space-y-16">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-               <div className="space-y-12">
+            <form onSubmit={handleSubmit} className="p-8 space-y-12">
+            <div className="space-y-12">
                   {/* Patient Segment */}
                   <section>
-                    <div className="flex items-center gap-3 mb-8">
-                      <div className="w-1 h-8 bg-red-600 rounded-full" />
-                      <h2 className="text-xs font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">{t('booking.patientInfo')}</h2>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-1 h-6 bg-red-600 rounded-full" />
+                      <h2 className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">{t('booking.patientInfo')}</h2>
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.3em] ml-1">{t('booking.fullName')}</label>
                         <div className="relative group">
@@ -209,7 +244,7 @@ export default function BookingPage() {
                       <div className="w-1 h-8 bg-red-600 rounded-full" />
                       <h2 className="text-xs font-black text-[var(--text-muted)] uppercase tracking-[0.2em]">Location Intercept</h2>
                     </div>
-                    <div className="aspect-square bg-[var(--card-bg-solid)] rounded-[2rem] overflow-hidden border border-[var(--border-color)] relative group shadow-xl">
+                    <div className="aspect-video bg-[var(--card-bg-solid)] rounded-[2rem] overflow-hidden border border-[var(--border-color)] relative group shadow-xl">
                         <SimulatedGridMap />
                         <div className="absolute inset-0 border-2 border-red-500/20 pointer-events-none group-hover:border-red-500/40 transition-colors" />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -217,24 +252,128 @@ export default function BookingPage() {
                         </div>
                     </div>
                   </section>
-               </div>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.4em] flex items-center justify-center gap-6 transition-all shadow-2xl italic border ${
+              className={`w-full py-6 rounded-xl font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all shadow-lg italic border ${
                 isSubmitting
                   ? 'bg-[var(--hover-bg)] text-[var(--text-muted)] border-[var(--border-color)] cursor-not-allowed'
-                  : 'bg-[var(--accent-red)] hover:bg-[var(--accent-red-2)] text-white border-red-500/25 pulse-red-glow'
+                  : 'bg-red-600 hover:bg-red-700 text-white border-red-500/25'
               }`}
             >
-              <Activity className={`w-6 h-6 ${isSubmitting ? 'animate-spin' : ''}`} />
-              {isSubmitting ? 'DECRYPTING PROTOCOL...' : 'EXECUTE SOS PROTOCOL'}
-              {!isSubmitting && <ChevronRight className="w-6 h-6" />}
+              <Activity className={`w-5 h-5 ${isSubmitting ? 'animate-spin' : ''}`} />
+              {isSubmitting ? 'PROCESSING...' : 'Book Ambulance'}
+              {!isSubmitting && <ChevronRight className="w-5 h-5" />}
             </button>
-          </form>
-        </motion.div>
+            </form>
+          </motion.div>
+
+          {/* Right: Nearby Ambulances Panel */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-1 glass-panel rounded-[2rem] overflow-hidden border-emerald-600/20 flex flex-col h-fit max-h-[calc(100vh-150px)]"
+          >
+            <div className="p-6 border-b border-[var(--border-color)] bg-emerald-600/5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-1 h-6 bg-emerald-600 rounded-full" />
+                <h2 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-[0.1em]">Nearby Ambulances</h2>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSortBy('distance')}
+                  className={`flex-1 py-2 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all ${
+                    sortBy === 'distance'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--border-color)]'
+                  }`}
+                >
+                  Distance
+                </button>
+                <button
+                  onClick={() => setSortBy('availability')}
+                  className={`flex-1 py-2 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all ${
+                    sortBy === 'availability'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--border-color)]'
+                  }`}
+                >
+                  Availability
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {nearbyAmbulances.slice(0, 6).map((amb, idx) => (
+                <motion.div
+                  key={amb.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`p-4 rounded-xl border transition-all ${
+                    amb.status === 'Available'
+                      ? 'bg-emerald-600/10 border-emerald-600/30 hover:border-emerald-600/60'
+                      : amb.status === 'Busy'
+                      ? 'bg-red-600/10 border-red-600/30'
+                      : 'bg-amber-600/10 border-amber-600/30'
+                  }`}
+                >
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Truck className={`w-4 h-4 ${amb.status === 'Available' ? 'text-emerald-600' : amb.status === 'Busy' ? 'text-red-600' : 'text-amber-600'}`} />
+                        <span className="font-black text-sm text-[var(--text-primary)]">{amb.name}</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-[var(--text-muted)]">{amb.plateNumber}</span>
+                    </div>
+                    <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                      amb.status === 'Available'
+                        ? 'bg-emerald-600/20 text-emerald-600'
+                        : amb.status === 'Busy'
+                        ? 'bg-red-600/20 text-red-600'
+                        : 'bg-amber-600/20 text-amber-600'
+                    }`}>
+                      {amb.status}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-[9px]">
+                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                      <MapPinIcon className="w-3 h-3 text-emerald-600" />
+                      <span className="font-semibold">{amb.distance.toFixed(1)} km away</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                      <Clock className="w-3 h-3 text-emerald-600" />
+                      <span className="font-semibold">ETA: {amb.eta} mins</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                      <Users className="w-3 h-3 text-emerald-600" />
+                      <span className="font-semibold">{amb.driverName}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {nearbyAmbulances.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Truck className="w-8 h-8 text-[var(--text-muted)] mb-2 opacity-50" />
+                  <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">No ambulances available</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-[var(--border-color)] bg-[var(--card-bg-subtle)]">
+              <div className="text-[9px] font-bold text-[var(--text-muted)] text-center">
+                <span className="inline-block px-3 py-1 rounded-lg bg-[var(--hover-bg)]">
+                  {nearbyAmbulances.filter(a => a.status === 'Available').length} Available
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

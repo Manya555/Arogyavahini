@@ -34,9 +34,9 @@ export const Navbar = () => {
 
   const navLinks = [
     { to: '/', label: 'Home' },
-    { to: '/booking', label: 'Emergency' },
-    { to: '/admin', label: 'Dashboard' },
-    { to: '/hospital', label: 'Hospitals' },
+    { to: '/ambulance-booking', label: 'Book Ambulance' },
+    { to: '/hospitals', label: 'Hospitals' },
+    { to: '/admin', label: 'Admin' },
   ];
 
   return (
@@ -124,7 +124,7 @@ export const Navbar = () => {
             </div>
 
             {!user ? (
-               <Link to="/booking" className="btn-primary min-w-[140px] px-6 lg:px-8">
+               <Link to="/ambulance-booking" className="btn-primary min-w-[140px] px-6 lg:px-8">
                   <Bell className="w-4 h-4 animate-pulse" />
                   <span className="hidden sm:inline">SOS Protocol</span>
                   <span className="sm:hidden">SOS</span>
@@ -192,7 +192,7 @@ export const Navbar = () => {
                   {language.toUpperCase()}
                 </div>
               </div>
-              <Link to="/booking" onClick={() => setIsMenuOpen(false)} className="block w-full py-6 bg-red-600 text-white rounded-2xl text-center text-sm font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-red-900/40">
+              <Link to="/ambulance-booking" onClick={() => setIsMenuOpen(false)} className="block w-full py-6 bg-red-600 text-white rounded-2xl text-center text-sm font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-red-900/40">
                 Initiate SOS Protocol
               </Link>
             </div>

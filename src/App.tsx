@@ -16,6 +16,7 @@ import BookingPage from './pages/BookingPage';
 import TrackingPage from './pages/TrackingPage';
 import DriverDashboard from './pages/DriverDashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
+import HospitalListingsPage from './pages/HospitalListingsPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPages from './pages/LoginPages';
 import { EmergencyStatus } from './context/SimulationContext';
@@ -41,23 +42,11 @@ const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const getDashboardPath = () => {
-    if (!user) return "/";
-    if (user.role === 'Admin') return "/admin";
-    if (user.role === 'Driver') return "/driver";
-    if (user.role === 'Hospital') return "/hospital";
-    return "/";
-  };
-
   const navItems = [
-    { to: getDashboardPath(), icon: TrendingUp, label: 'Analytical Graph', id: 'analytics' },
-    { to: "/booking", icon: Bell, label: 'Notifications Hub', id: 'notifications' },
-    { 
-      to: user?.role === 'Admin' ? "/admin" : "/internal/admin-login", 
-      icon: ShieldCheck, 
-      label: 'System Status', 
-      id: 'system' 
-    },
+    { to: "/", icon: Heart, label: 'Home', id: 'home' },
+    { to: "/ambulance-booking", icon: Truck, label: 'Book Ambulance', id: 'ambulance' },
+    { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
+    { to: "/admin", icon: ShieldCheck, label: 'Admin Portal', id: 'admin' },
   ];
 
   return (
@@ -70,9 +59,7 @@ const Sidebar = () => {
         
         <div className="flex-1 flex flex-col items-center gap-10">
           {navItems.map((item) => {
-            const dashboardPaths = ['/admin', '/driver', '/hospital'];
-            const isActive = location.pathname === item.to || 
-              (item.id === 'analytics' && dashboardPaths.includes(location.pathname));
+            const isActive = location.pathname === item.to;
               
             return (
               <Link 
@@ -115,9 +102,7 @@ const Sidebar = () => {
       {/* Mobile Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-[var(--sidebar-bg)]/85 border-t border-[var(--border-color)] z-[60] flex items-center justify-around px-4 backdrop-blur-xl">
         {navItems.map((item) => {
-          const dashboardPaths = ['/admin', '/driver', '/hospital'];
-          const isActive = location.pathname === item.to || 
-            (item.id === 'analytics' && dashboardPaths.includes(location.pathname));
+          const isActive = location.pathname === item.to;
             
           return (
             <Link 
@@ -154,10 +139,10 @@ export default function App() {
 
                 <div className="flex-1 lg:ml-20">
                    <Navbar />
-                   <main className="pt-24 pb-24 lg:pb-12 px-4 lg:px-0">
+                   <main className="pt-20 pb-28 lg:pb-12 px-4 lg:px-0">
                      <Routes>
                        <Route path="/" element={<LandingPage />} />
-                       <Route path="/booking" element={<BookingPage />} />
+                       <Route path="/ambulance-booking" element={<BookingPage />} />
                        <Route path="/tracking/:id" element={<TrackingPage />} />
                        
                        {/* Logins */}
@@ -171,11 +156,7 @@ export default function App() {
                            <DriverDashboard />
                          </ProtectedRoute>
                        } />
-                       <Route path="/hospital" element={
-                         <ProtectedRoute roles={['Hospital']}>
-                           <HospitalDashboard />
-                         </ProtectedRoute>
-                       } />
+                       <Route path="/hospitals" element={<HospitalListingsPage />} />
                        <Route path="/admin" element={
                          <ProtectedRoute roles={['Admin']}>
                            <AdminDashboard />
