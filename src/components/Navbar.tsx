@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Heart,
-  Bell,
   Globe,
   Moon,
   Sun,
   LogOut,
   Menu,
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage, useTheme } from '../context/UIContext';
+import { useLanguage, useTheme, type Language } from '../context/UIContext';
 
 export const Navbar = () => {
-  const { user, logout, login } = useAuth();
-  const { language, setLanguage } = useLanguage();
+  const { user, logout } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -29,12 +30,30 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setIsLangOpen(false);
+    if (isLangOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [isLangOpen]);
+
   const navLinks = [
-    { to: '/user-dashboard', label: 'Dashboard' },
-    { to: '/sos-booking', label: 'SOS Emergency' },
-    { to: '/live-map', label: 'Live Tracking' },
-    { to: '/hospitals', label: 'Hospitals' },
+    { to: '/dashboard', label: t('nav.dashboard') || 'Dashboard' },
+    { to: '/live-map', label: t('nav.liveTracking') || 'Live Tracking' },
+    { to: '/hospitals', label: t('nav.hospitals') || 'Hospitals' },
   ];
+
+  const languages: { code: Language; label: string }[] = [
+    { code: 'en', label: 'English' },
+    { code: 'kn', label: 'ಕನ್ನಡ' },
+    { code: 'hi', label: 'हिंदी' },
+  ];
+
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
 
   return (
     <nav className={`fixed top-0 lg:left-20 right-0 z-50 transition-all duration-500 ${scrolled
@@ -56,7 +75,9 @@ export const Navbar = () => {
                 <span className="text-xl lg:text-2xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
                   Arogya<span className="text-red-600 italic">Vahini</span>
                 </span>
-                <span className="text-[8px] font-black tracking-[0.4em] text-[var(--text-muted)] uppercase mt-1.5 hidden sm:block">MEDICAL EMERGENCY RESPONSE</span>
+                <span className="text-[8px] font-black tracking-[0.4em] text-[var(--text-muted)] uppercase mt-1.5 hidden sm:block">
+                  {t('nav.tagline') || 'MEDICAL EMERGENCY RESPONSE'}
+                </span>
               </div>
             </Link>
 
@@ -78,14 +99,77 @@ export const Navbar = () => {
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center gap-4 lg:gap-6">
+          <div className="flex items-center gap-3 lg:gap-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl hover:bg-[var(--hover-bg)] transition-all"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4 text-yellow-500" />
+              ) : (
+                <Moon className="w-4 h-4 text-[var(--text-muted)]" />
+              )}
+            </button>
+
+            {/* Language Dropdown */}
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLangOpen(!isLangOpen);
+                }}
+                className="p-3 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl hover:bg-[var(--hover-bg)] transition-all flex items-center gap-2"
+                aria-label="Select language"
+              >
+                <Globe className="w-4 h-4 text-[var(--text-muted)]" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-muted)] hidden sm:inline">
+                  {language.toUpperCase()}
+                </span>
+                <ChevronDown className={`w-3 h-3 text-[var(--text-muted)] transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {isLangOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 bg-[var(--card-bg-solid)] border border-[var(--border-color)] rounded-xl overflow-hidden shadow-xl z-50 min-w-[120px]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setIsLangOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-xs font-bold transition-all hover:bg-[var(--hover-bg)] ${
+                          language === lang.code
+                            ? 'text-red-600 bg-red-600/5'
+                            : 'text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Login / User Section */}
             {!user ? (
-              <button onClick={() => setIsLoginOpen(true)} className="btn-primary min-w-[140px] px-6 lg:px-8">
-                <Bell className="w-4 h-4 animate-pulse" />
-                <span>Login</span>
+              <button
+                onClick={handleLoginClick}
+                className="btn-primary min-w-[100px] px-4 lg:px-6 !py-3"
+              >
+                <span>{t('nav.login') || 'Login'}</span>
               </button>
             ) : (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-[8px] font-black text-red-600 uppercase tracking-widest">{String(user.role)}</span>
                   <span className="text-xs font-black text-[var(--text-primary)]">{String(user.name)}</span>
@@ -103,36 +187,31 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Login Modal */}
+      {/* Mobile Menu */}
       <AnimatePresence>
-        {isLoginOpen && (
+        {isMenuOpen && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4"
-            onClick={() => setIsLoginOpen(false)}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-[var(--bg-primary)] border-b border-[var(--border-color)]"
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-3xl p-8 max-w-sm w-full shadow-2xl"
-              onClick={e => e.stopPropagation()}
-            >
-              <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase italic mb-8">Login</h2>
-              <div className="space-y-3">
-                {['Patient', 'Driver', 'Hospital', 'Admin'].map((role) => (
-                  <button
-                    key={role}
-                    onClick={() => {
-                      // FIXED: Passing separate string arguments instead of one object
-                      login(role as any, `user-${Date.now()}`, `${role} User`);
-                      setIsLoginOpen(false);
-                    }}
-                    className="w-full py-4 rounded-xl font-black uppercase tracking-widest text-white transition-all bg-red-600 hover:bg-red-700 border-2 border-red-500"
-                  >
-                    Login as {role}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+            <div className="px-6 py-4 space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`block px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                    location.pathname === link.to
+                      ? 'bg-red-600/10 text-red-600'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
