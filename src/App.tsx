@@ -8,7 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation 
 import { SimulationProvider } from './context/SimulationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, LanguageProvider, useLanguage, useTheme } from './context/UIContext';
-import { Heart, Activity, ShieldCheck, MapPin, Truck, Hospital, UserCog, LogOut, Bell, Menu, X, Globe, Moon, Sun, TrendingUp, LayoutDashboard, AlertCircle } from 'lucide-react';
+import { Home, Activity, ShieldCheck, MapPin, Truck, Hospital, UserCog, LogOut, Bell, Menu, X, Globe, Moon, Sun, TrendingUp, LayoutDashboard, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import LandingPage from './pages/LandingPage';
@@ -46,7 +46,7 @@ const Sidebar = () => {
   const location = useLocation();
 
   const navItems = [
-    { to: "/user-dashboard", icon: Heart, label: 'Dashboard', id: 'dashboard' },
+    { to: "/user-dashboard", icon: Home, label: 'Dashboard', id: 'dashboard' },
     { to: "/sos-booking", icon: AlertCircle, label: 'SOS Emergency', id: 'sos' },
     { to: "/live-map", icon: MapPin, label: 'Live Tracking', id: 'map' },
     { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
@@ -58,7 +58,7 @@ const Sidebar = () => {
       {/* Desktop Sidebar */}
       <div className="fixed left-0 top-0 bottom-0 w-20 bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] z-[60] hidden lg:flex flex-col items-center py-10 gap-12">
         <Link to="/" className="w-12 h-12 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/25 group transition-all hover:bg-red-600/15">
-          <Heart className="w-6 h-6 text-red-600 fill-red-600" />
+          <Home className="w-6 h-6 text-red-600" />
         </Link>
         
         <div className="flex-1 flex flex-col items-center gap-10">
