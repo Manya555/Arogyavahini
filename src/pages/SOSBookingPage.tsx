@@ -13,9 +13,11 @@ import {
   Hospital,
   CheckCircle,
   Circle,
-  Navigation
+  Navigation,
+  Locate
 } from 'lucide-react';
-import { SimulatedGridMap } from '../components/SimulatedGridMap';
+import { EmergencyMap } from '../components/EmergencyMap';
+import { Coordinates } from '../context/SimulationContext';
 import { useLanguage } from '../context/UIContext';
 
 type DriverStatus = 'pending' | 'accepted' | 'enRoute' | 'arrived';
@@ -47,6 +49,9 @@ export default function SOSBookingPage() {
   const [isBooked, setIsBooked] = useState(false);
   const [driverStatus, setDriverStatus] = useState<DriverStatus>('pending');
   const [eta, setEta] = useState(12);
+  const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
+  const [geolocationError, setGeolocationError] = useState<string | null>(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([
     { id: 1, status: 'Request Submitted', time: '', completed: false },
     { id: 2, status: 'Driver Assigned', time: '', completed: false },
@@ -60,6 +65,38 @@ export default function SOSBookingPage() {
     { id: 3, name: 'St. Mary Medical', distance: '4.5 km', eta: '10 min', beds: 15 },
     { id: 4, name: 'Regional Trauma Center', distance: '5.2 km', eta: '12 min', beds: 6 },
   ];
+
+  // Get user location on mount
+  useEffect(() => {
+    const getLocation = () => {
+      setLoadingLocation(true);
+      setGeolocationError(null);
+
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            });
+            setLoadingLocation(false);
+          },
+          (error) => {
+            // Fallback to Bengaluru center if permission denied
+            setUserLocation({ lat: 12.9716, lng: 77.5946 });
+            setGeolocationError('Using default location');
+            setLoadingLocation(false);
+          }
+        );
+      } else {
+        setUserLocation({ lat: 12.9716, lng: 77.5946 });
+        setGeolocationError('Geolocation not supported');
+        setLoadingLocation(false);
+      }
+    };
+
+    getLocation();
+  }, []);
 
   // Simulate driver status progression
   useEffect(() => {
@@ -170,26 +207,20 @@ export default function SOSBookingPage() {
                   </div>
                 </div>
                 <div className="h-80 relative">
-                  <SimulatedGridMap />
-                  <div className="absolute inset-0 pointer-events-none">
-                    {/* Ambulance marker */}
-                    <motion.div
-                      animate={{ 
-                        x: driverStatus === 'enRoute' ? [0, 20, 40] : driverStatus === 'arrived' ? 60 : 0,
-                        y: driverStatus === 'enRoute' ? [0, -10, -20] : driverStatus === 'arrived' ? -30 : 0
-                      }}
-                      transition={{ duration: 2, repeat: driverStatus === 'enRoute' ? Infinity : 0 }}
-                      className="absolute top-1/3 left-1/4"
-                    >
-                      <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-600/30">
-                        <Truck className="w-4 h-4 text-white" />
-                      </div>
-                    </motion.div>
-                    {/* User marker */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/30" />
-                    </div>
-                  </div>
+                  {userLocation && (
+                    <EmergencyMap 
+                      center={userLocation}
+                      zoom={14}
+                      markers={[
+                        {
+                          id: 'user',
+                          coords: userLocation,
+                          type: 'patient',
+                          label: 'Your Location'
+                        }
+                      ]}
+                    />
+                  )}
                 </div>
               </motion.div>
 
@@ -449,20 +480,51 @@ export default function SOSBookingPage() {
               />
             </div>
 
-            {/* Map Preview */}
+            {/* Location Section */}
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <MapPin className="w-4 h-4 text-red-600" />
-                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
-                  {t('ambulanceRequest.currentLocation') || 'Current Location'}
-                </label>
+              <div className="flex items-center gap-3 mb-4 justify-between">
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-red-600" />
+                  <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                    {t('ambulanceRequest.currentLocation') || 'Current Location'}
+                  </label>
+                </div>
+                {userLocation && (
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
+                    Lat: {userLocation.lat.toFixed(4)}, Lng: {userLocation.lng.toFixed(4)}
+                  </span>
+                )}
               </div>
               <div className="h-56 bg-[var(--card-bg)] rounded-xl overflow-hidden border border-[var(--border-color)] relative">
-                <SimulatedGridMap />
-                <div className="absolute inset-0 border-2 border-red-500/20 pointer-events-none" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
-                </div>
+                {userLocation ? (
+                  <EmergencyMap 
+                    center={userLocation}
+                    zoom={14}
+                    markers={[
+                      {
+                        id: 'user',
+                        coords: userLocation,
+                        type: 'patient',
+                        label: 'Your Location'
+                      }
+                    ]}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center flex-col gap-3">
+                    {loadingLocation ? (
+                      <>
+                        <Activity className="w-8 h-8 text-red-600 animate-spin" />
+                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Detecting location...</p>
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="w-8 h-8 text-red-600/30" />
+                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Location detection failed</p>
+                        <p className="text-[8px] text-[var(--text-muted)]">Using default location</p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
