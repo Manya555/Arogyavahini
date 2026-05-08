@@ -34,9 +34,9 @@ export const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/emergency', label: 'Emergency' },
-    { to: '/ambulance-booking', label: 'Book Ambulance' },
+    { to: '/user-dashboard', label: 'Dashboard' },
+    { to: '/sos-booking', label: 'SOS Emergency' },
+    { to: '/live-map', label: 'Live Tracking' },
     { to: '/hospitals', label: 'Hospitals' },
   ];
 

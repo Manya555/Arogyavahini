@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import BookingPage from './pages/BookingPage';
+import SOSBookingPage from './pages/SOSBookingPage';
+import UserDashboardPage from './pages/UserDashboardPage';
 import TrackingPage from './pages/TrackingPage';
 import DriverDashboard from './pages/DriverDashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
@@ -44,9 +46,9 @@ const Sidebar = () => {
   const location = useLocation();
 
   const navItems = [
-    { to: "/", icon: Heart, label: 'Home', id: 'home' },
-    { to: "/emergency", icon: Activity, label: 'Live Ambulance Map', id: 'emergency' },
-    { to: "/ambulance-booking", icon: Truck, label: 'Book Ambulance', id: 'ambulance' },
+    { to: "/user-dashboard", icon: Heart, label: 'Dashboard', id: 'dashboard' },
+    { to: "/sos-booking", icon: AlertCircle, label: 'SOS Emergency', id: 'sos' },
+    { to: "/live-map", icon: MapPin, label: 'Live Tracking', id: 'map' },
     { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
     ...(user?.role === 'Driver' ? [{ to: "/driver-portal", icon: LayoutDashboard, label: 'Driver Portal', id: 'driver' }] : []),
   ];
@@ -136,7 +138,9 @@ export default function App() {
                    <main className="pt-20 pb-28 lg:pb-12 px-4 lg:px-0">
                      <Routes>
                        <Route path="/" element={<LandingPage />} />
-                       <Route path="/emergency" element={<BookingPage />} />
+                       <Route path="/user-dashboard" element={<UserDashboardPage />} />
+                       <Route path="/sos-booking" element={<SOSBookingPage />} />
+                       <Route path="/live-map" element={<BookingPage />} />
                        <Route path="/ambulance-booking" element={<BookingPage />} />
                        <Route path="/hospitals" element={<HospitalListingsPage />} />
                        <Route path="/hospitals/:id" element={<HospitalDetailPage />} />
