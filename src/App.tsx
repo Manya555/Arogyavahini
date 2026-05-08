@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { SimulationProvider } from './context/SimulationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider, LanguageProvider, useLanguage, useTheme } from './context/UIContext';
-import { Home, Activity, ShieldCheck, MapPin, Truck, Hospital, UserCog, LogOut, Bell, Menu, X, Globe, Moon, Sun, TrendingUp, LayoutDashboard, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { ThemeProvider, LanguageProvider } from './context/UIContext';
+import { Home, Activity, MapPin, Hospital, UserCog, LayoutDashboard } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import BookingPage from './pages/BookingPage';
@@ -17,12 +17,10 @@ import SOSBookingPage from './pages/SOSBookingPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import TrackingPage from './pages/TrackingPage';
 import DriverDashboard from './pages/DriverDashboard';
-import HospitalDashboard from './pages/HospitalDashboard';
 import HospitalListingsPage from './pages/HospitalListingsPage';
 import HospitalDetailPage from './pages/HospitalDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPages from './pages/LoginPages';
-import { EmergencyStatus } from './context/SimulationContext';
 
 // Global Protected Route Helper
 const ProtectedRoute = ({ children, roles }: { children: React.ReactNode, roles: string[] }) => {
@@ -46,8 +44,7 @@ const Sidebar = () => {
   const location = useLocation();
 
   const navItems = [
-    { to: "/user-dashboard", icon: Home, label: 'Dashboard', id: 'dashboard' },
-    { to: "/sos-booking", icon: AlertCircle, label: 'SOS Emergency', id: 'sos' },
+    { to: "/dashboard", icon: Activity, label: 'SOS Dashboard', id: 'dashboard' },
     { to: "/live-map", icon: MapPin, label: 'Live Tracking', id: 'map' },
     { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
     ...(user?.role === 'Driver' ? [{ to: "/driver-portal", icon: LayoutDashboard, label: 'Driver Portal', id: 'driver' }] : []),
@@ -136,18 +133,15 @@ export default function App() {
                    <main className="pt-20 pb-28 lg:pb-12 px-4 lg:px-0">
                      <Routes>
                        <Route path="/" element={<LandingPage />} />
-                       <Route path="/user-dashboard" element={<UserDashboardPage />} />
-                       <Route path="/sos-booking" element={<SOSBookingPage />} />
+                       <Route path="/dashboard" element={<UserDashboardPage />} />
+                       <Route path="/ambulance-request" element={<SOSBookingPage />} />
                        <Route path="/live-map" element={<BookingPage />} />
-                       <Route path="/ambulance-booking" element={<BookingPage />} />
                        <Route path="/hospitals" element={<HospitalListingsPage />} />
                        <Route path="/hospitals/:id" element={<HospitalDetailPage />} />
                        <Route path="/tracking/:id" element={<TrackingPage />} />
                        
-                       {/* Logins */}
-                       <Route path="/login/driver" element={<LoginPages type="driver" />} />
-                       <Route path="/internal/hospital-login" element={<LoginPages type="hospital" />} />
-                       <Route path="/internal/admin-login" element={<LoginPages type="admin" />} />
+                       {/* Login */}
+                       <Route path="/login" element={<LoginPages />} />
 
                        {/* Driver Portal */}
                        <Route path="/driver-portal" element={

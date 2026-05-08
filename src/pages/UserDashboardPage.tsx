@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { AlertCircle, MapPin, Hospital, BarChart3, Clock, CheckCircle, Activity } from 'lucide-react';
+import { AlertCircle, MapPin, Hospital, Clock, CheckCircle, Activity } from 'lucide-react';
+import { useLanguage } from '../context/UIContext';
 
 export default function UserDashboardPage() {
+  const { t } = useLanguage();
+
   const stats = [
-    { icon: Activity, label: 'Active Calls', value: '12', color: 'emerald' },
-    { icon: Clock, label: 'Avg Response', value: '8 min', color: 'blue' },
-    { icon: CheckCircle, label: 'Completed', value: '847', color: 'green' },
-    { icon: Hospital, label: 'Hospitals', value: '24', color: 'purple' },
+    { icon: Activity, label: t('userDashboard.activeCalls') || 'Active Calls', value: '12', color: 'emerald' },
+    { icon: Clock, label: t('userDashboard.avgResponse') || 'Avg Response', value: '8 min', color: 'blue' },
+    { icon: CheckCircle, label: t('userDashboard.completed') || 'Completed', value: '847', color: 'green' },
+    { icon: Hospital, label: t('userDashboard.hospitals') || 'Hospitals', value: '24', color: 'red' },
   ];
 
   const recentEmergencies = [
@@ -26,8 +29,12 @@ export default function UserDashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-black text-[var(--text-primary)] uppercase italic mb-2">Emergency Response Dashboard</h1>
-          <p className="text-sm text-[var(--text-muted)]">Real-time system status and emergency management</p>
+          <h1 className="text-3xl font-black text-[var(--text-primary)] uppercase italic mb-2">
+            {t('userDashboard.title') || 'Emergency Response Dashboard'}
+          </h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            {t('userDashboard.subtitle') || 'Real-time system status and emergency management'}
+          </p>
         </motion.div>
 
         {/* Action Buttons */}
@@ -37,14 +44,18 @@ export default function UserDashboardPage() {
           className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
         >
           <Link
-            to="/sos-booking"
+            to="/ambulance-request"
             className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 to-red-700 p-6 text-white transition-all hover:shadow-2xl hover:shadow-red-600/30"
           >
             <div className="absolute inset-0 bg-white/10 transform -skew-y-3 origin-left scale-125 opacity-0 group-hover:opacity-100 transition-all" />
             <div className="relative flex items-center justify-between">
               <div>
-                <h3 className="font-black text-xl uppercase italic">SOS Emergency</h3>
-                <p className="text-xs font-bold text-red-100 mt-1">Quick ambulance request</p>
+                <h3 className="font-black text-xl uppercase italic">
+                  {t('userDashboard.sosEmergency') || 'SOS Emergency'}
+                </h3>
+                <p className="text-xs font-bold text-red-100 mt-1">
+                  {t('userDashboard.quickAmbulance') || 'Quick ambulance request'}
+                </p>
               </div>
               <AlertCircle className="w-8 h-8" />
             </div>
@@ -57,8 +68,12 @@ export default function UserDashboardPage() {
             <div className="absolute inset-0 bg-white/10 transform -skew-y-3 origin-left scale-125 opacity-0 group-hover:opacity-100 transition-all" />
             <div className="relative flex items-center justify-between">
               <div>
-                <h3 className="font-black text-xl uppercase italic">Live Tracking</h3>
-                <p className="text-xs font-bold text-blue-100 mt-1">View ambulance locations</p>
+                <h3 className="font-black text-xl uppercase italic">
+                  {t('userDashboard.liveTracking') || 'Live Tracking'}
+                </h3>
+                <p className="text-xs font-bold text-blue-100 mt-1">
+                  {t('userDashboard.viewAmbulance') || 'View ambulance locations'}
+                </p>
               </div>
               <MapPin className="w-8 h-8" />
             </div>
@@ -78,8 +93,18 @@ export default function UserDashboardPage() {
               whileHover={{ y: -4 }}
               className="glass-panel rounded-2xl p-4 border-[var(--border-color)]"
             >
-              <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-3 bg-${stat.color}-600/20`}>
-                <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
+              <div className={`flex items-center justify-center w-10 h-10 rounded-lg mb-3 ${
+                stat.color === 'emerald' ? 'bg-emerald-600/20' :
+                stat.color === 'blue' ? 'bg-blue-600/20' :
+                stat.color === 'green' ? 'bg-green-600/20' :
+                'bg-red-600/20'
+              }`}>
+                <stat.icon className={`w-5 h-5 ${
+                  stat.color === 'emerald' ? 'text-emerald-600' :
+                  stat.color === 'blue' ? 'text-blue-600' :
+                  stat.color === 'green' ? 'text-green-600' :
+                  'text-red-600'
+                }`} />
               </div>
               <div className="text-2xl font-black text-[var(--text-primary)] mb-1">{stat.value}</div>
               <div className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{stat.label}</div>
@@ -94,8 +119,10 @@ export default function UserDashboardPage() {
           transition={{ delay: 0.2 }}
           className="glass-panel rounded-2xl border-[var(--border-color)] overflow-hidden"
         >
-          <div className="p-6 border-b border-[var(--border-color)] bg-[var(--card-bg-subtle)]">
-            <h2 className="text-lg font-black text-[var(--text-primary)] uppercase italic">Recent Emergencies</h2>
+          <div className="p-6 border-b border-[var(--border-color)] bg-[var(--hover-bg)]">
+            <h2 className="text-lg font-black text-[var(--text-primary)] uppercase italic">
+              {t('userDashboard.recentEmergencies') || 'Recent Emergencies'}
+            </h2>
           </div>
           
           <div className="divide-y divide-[var(--border-color)]">

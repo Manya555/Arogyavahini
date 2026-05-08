@@ -1,13 +1,42 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSimulation } from '../context/SimulationContext';
-import { motion } from 'motion/react';
-import { AlertCircle, MapPin, Phone, User, Clipboard, ChevronRight, Activity } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  AlertCircle, 
+  MapPin, 
+  Phone, 
+  User, 
+  Clipboard, 
+  ChevronRight, 
+  Activity,
+  Clock,
+  Truck,
+  Hospital,
+  CheckCircle,
+  Circle,
+  Navigation
+} from 'lucide-react';
 import { SimulatedGridMap } from '../components/SimulatedGridMap';
+import { useLanguage } from '../context/UIContext';
+
+type DriverStatus = 'pending' | 'accepted' | 'enRoute' | 'arrived';
+
+interface TimelineEvent {
+  id: number;
+  status: string;
+  time: string;
+  completed: boolean;
+}
+
+interface NearbyHospital {
+  id: number;
+  name: string;
+  distance: string;
+  eta: string;
+  beds: number;
+}
 
 export default function SOSBookingPage() {
-  const navigate = useNavigate();
-  const { createEmergency } = useSimulation();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     patientName: '',
     contactNumber: '',
@@ -15,33 +44,306 @@ export default function SOSBookingPage() {
     symptoms: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBooked, setIsBooked] = useState(false);
+  const [driverStatus, setDriverStatus] = useState<DriverStatus>('pending');
+  const [eta, setEta] = useState(12);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([
+    { id: 1, status: 'Request Submitted', time: '', completed: false },
+    { id: 2, status: 'Driver Assigned', time: '', completed: false },
+    { id: 3, status: 'Ambulance En Route', time: '', completed: false },
+    { id: 4, status: 'Ambulance Arrived', time: '', completed: false },
+  ]);
 
-  const mockPickupLocation = { lat: 12.9716 + (Math.random() - 0.5) * 0.1, lng: 77.5946 + (Math.random() - 0.5) * 0.1 };
+  const nearbyHospitals: NearbyHospital[] = [
+    { id: 1, name: 'City General Hospital', distance: '2.3 km', eta: '5 min', beds: 12 },
+    { id: 2, name: 'Apollo Emergency Center', distance: '3.8 km', eta: '8 min', beds: 8 },
+    { id: 3, name: 'St. Mary Medical', distance: '4.5 km', eta: '10 min', beds: 15 },
+    { id: 4, name: 'Regional Trauma Center', distance: '5.2 km', eta: '12 min', beds: 6 },
+  ];
+
+  // Simulate driver status progression
+  useEffect(() => {
+    if (!isBooked) return;
+
+    const statusProgression: DriverStatus[] = ['pending', 'accepted', 'enRoute', 'arrived'];
+    let currentIndex = 0;
+
+    const interval = setInterval(() => {
+      currentIndex++;
+      if (currentIndex < statusProgression.length) {
+        setDriverStatus(statusProgression[currentIndex]);
+        
+        // Update timeline
+        setTimeline(prev => prev.map((event, idx) => 
+          idx <= currentIndex ? { ...event, completed: true, time: new Date().toLocaleTimeString() } : event
+        ));
+        
+        // Update ETA
+        setEta(prev => Math.max(0, prev - 4));
+      } else {
+        clearInterval(interval);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isBooked]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    try {
-      const emergencyData = {
-        ...formData,
-        location: mockPickupLocation,
-        severity: 'High',
-        gcs: 15,
-        bp: '120/80',
-        spo2: 98,
-      };
-      
-      await createEmergency(emergencyData);
-      setTimeout(() => {
-        navigate('/live-map');
-      }, 1000);
-    } catch (error) {
-      console.error('Error creating emergency:', error);
-      setIsSubmitting(false);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setIsSubmitting(false);
+    setIsBooked(true);
+    setTimeline(prev => prev.map((event, idx) => 
+      idx === 0 ? { ...event, completed: true, time: new Date().toLocaleTimeString() } : event
+    ));
+  };
+
+  const getStatusColor = (status: DriverStatus) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
+      case 'accepted': return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
+      case 'enRoute': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+      case 'arrived': return 'text-green-500 bg-green-500/10 border-green-500/20';
     }
   };
 
+  const getStatusLabel = (status: DriverStatus) => {
+    switch (status) {
+      case 'pending': return t('ambulanceRequest.pending') || 'Pending';
+      case 'accepted': return t('ambulanceRequest.accepted') || 'Accepted';
+      case 'enRoute': return t('ambulanceRequest.enRoute') || 'En Route';
+      case 'arrived': return t('ambulanceRequest.arrived') || 'Arrived';
+    }
+  };
+
+  if (isBooked) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-primary)] py-8 px-4 transition-colors duration-300">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-black text-[var(--text-primary)] uppercase italic mb-2">
+              {t('ambulanceRequest.liveTracking') || 'Live Tracking'}
+            </h1>
+            <p className="text-sm text-[var(--text-muted)]">
+              {t('ambulanceRequest.subtitle') || 'Emergency Medical Service'}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Map & Status */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Live Map */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-panel rounded-3xl overflow-hidden"
+              >
+                <div className="p-6 border-b border-[var(--border-color)] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-red-600/10 rounded-xl flex items-center justify-center">
+                      <Navigation className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <h2 className="font-black text-[var(--text-primary)] uppercase text-sm">
+                        {t('ambulanceRequest.liveTracking') || 'Live Tracking'}
+                      </h2>
+                      <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">
+                        Real-time ambulance location
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Live</span>
+                  </div>
+                </div>
+                <div className="h-80 relative">
+                  <SimulatedGridMap />
+                  <div className="absolute inset-0 pointer-events-none">
+                    {/* Ambulance marker */}
+                    <motion.div
+                      animate={{ 
+                        x: driverStatus === 'enRoute' ? [0, 20, 40] : driverStatus === 'arrived' ? 60 : 0,
+                        y: driverStatus === 'enRoute' ? [0, -10, -20] : driverStatus === 'arrived' ? -30 : 0
+                      }}
+                      transition={{ duration: 2, repeat: driverStatus === 'enRoute' ? Infinity : 0 }}
+                      className="absolute top-1/3 left-1/4"
+                    >
+                      <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-600/30">
+                        <Truck className="w-4 h-4 text-white" />
+                      </div>
+                    </motion.div>
+                    {/* User marker */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/30" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Driver Status & ETA */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="grid grid-cols-2 gap-4"
+              >
+                <div className="glass-panel rounded-2xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Truck className="w-5 h-5 text-red-600" />
+                    <span className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                      {t('ambulanceRequest.driverStatus') || 'Driver Status'}
+                    </span>
+                  </div>
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border ${getStatusColor(driverStatus)}`}>
+                    <Activity className={`w-4 h-4 ${driverStatus === 'enRoute' ? 'animate-pulse' : ''}`} />
+                    <span className="font-black text-sm uppercase tracking-wider">{getStatusLabel(driverStatus)}</span>
+                  </div>
+                  {driverStatus !== 'pending' && (
+                    <div className="mt-4 text-xs text-[var(--text-muted)]">
+                      <p className="font-bold">Driver: Rajesh Kumar</p>
+                      <p>Vehicle: KA-01-AB-1234</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="glass-panel rounded-2xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Clock className="w-5 h-5 text-red-600" />
+                    <span className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                      {t('ambulanceRequest.eta') || 'ETA'}
+                    </span>
+                  </div>
+                  <div className="text-4xl font-mono font-black text-[var(--text-primary)]">
+                    {eta > 0 ? `${eta} min` : 'Arrived'}
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] mt-2">Estimated arrival time</p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right Column - Nearby Hospitals, Summary, Timeline */}
+            <div className="space-y-6">
+              {/* Booking Summary */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="glass-panel rounded-2xl p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Clipboard className="w-5 h-5 text-red-600" />
+                  <span className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                    {t('ambulanceRequest.bookingSummary') || 'Booking Summary'}
+                  </span>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[var(--text-muted)]">Patient</span>
+                    <span className="font-bold text-[var(--text-primary)]">{formData.patientName || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--text-muted)]">Contact</span>
+                    <span className="font-bold text-[var(--text-primary)]">{formData.contactNumber || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[var(--text-muted)]">Type</span>
+                    <span className="font-bold text-red-600">{formData.emergencyType}</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Timeline */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="glass-panel rounded-2xl p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Activity className="w-5 h-5 text-red-600" />
+                  <span className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                    {t('ambulanceRequest.timeline') || 'Request Timeline'}
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {timeline.map((event, idx) => (
+                    <div key={event.id} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        {event.completed ? (
+                          <CheckCircle className="w-5 h-5 text-emerald-500" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-[var(--text-muted)]" />
+                        )}
+                        {idx < timeline.length - 1 && (
+                          <div className={`w-0.5 h-8 mt-1 ${event.completed ? 'bg-emerald-500' : 'bg-[var(--border-color)]'}`} />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-sm font-bold ${event.completed ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}`}>
+                          {event.status}
+                        </p>
+                        {event.time && (
+                          <p className="text-[10px] text-emerald-500 font-mono">{event.time}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Nearby Hospitals */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="glass-panel rounded-2xl p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Hospital className="w-5 h-5 text-red-600" />
+                  <span className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                    {t('ambulanceRequest.nearbyHospitals') || 'Nearby Hospitals'}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {nearbyHospitals.map((hospital) => (
+                    <div 
+                      key={hospital.id}
+                      className="p-3 bg-[var(--hover-bg)] rounded-xl border border-[var(--border-color)]"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-[var(--text-primary)]">{hospital.name}</p>
+                          <p className="text-[10px] text-[var(--text-muted)]">{hospital.distance} away</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-bold text-emerald-500">{hospital.eta}</p>
+                          <p className="text-[10px] text-[var(--text-muted)]">{hospital.beds} beds</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Booking Form View
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] py-8 px-4 transition-colors duration-300">
       <div className="max-w-3xl mx-auto">
@@ -61,8 +363,12 @@ export default function SOSBookingPage() {
                 <AlertCircle className="w-7 h-7" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-[var(--text-primary)] uppercase italic">SOS Emergency Request</h1>
-                <p className="text-xs font-bold text-red-600 uppercase tracking-widest mt-1">Rapid Ambulance Dispatch</p>
+                <h1 className="text-2xl font-black text-[var(--text-primary)] uppercase italic">
+                  {t('ambulanceRequest.title') || 'Request Ambulance'}
+                </h1>
+                <p className="text-xs font-bold text-red-600 uppercase tracking-widest mt-1">
+                  {t('ambulanceRequest.subtitle') || 'Emergency Medical Service'}
+                </p>
               </div>
             </div>
           </div>
@@ -73,11 +379,13 @@ export default function SOSBookingPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <User className="w-4 h-4 text-red-600" />
-                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Patient Information</label>
+                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                  {t('ambulanceRequest.patientInfo') || 'Patient Information'}
+                </label>
               </div>
               <input
                 type="text"
-                placeholder="Full Name"
+                placeholder={t('ambulanceRequest.fullName') || 'Full Name'}
                 value={formData.patientName}
                 onChange={(e) => setFormData({...formData, patientName: e.target.value})}
                 required
@@ -89,11 +397,13 @@ export default function SOSBookingPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <Phone className="w-4 h-4 text-red-600" />
-                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Contact Number</label>
+                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                  {t('ambulanceRequest.contactNumber') || 'Contact Number'}
+                </label>
               </div>
               <input
                 type="tel"
-                placeholder="Mobile Number"
+                placeholder={t('ambulanceRequest.contactNumber') || 'Mobile Number'}
                 value={formData.contactNumber}
                 onChange={(e) => setFormData({...formData, contactNumber: e.target.value})}
                 required
@@ -105,7 +415,9 @@ export default function SOSBookingPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <AlertCircle className="w-4 h-4 text-red-600" />
-                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Emergency Type</label>
+                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                  {t('ambulanceRequest.emergencyType') || 'Emergency Type'}
+                </label>
               </div>
               <select
                 value={formData.emergencyType}
@@ -124,10 +436,12 @@ export default function SOSBookingPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <Clipboard className="w-4 h-4 text-red-600" />
-                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Symptoms / Description</label>
+                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                  {t('ambulanceRequest.symptoms') || 'Symptoms / Description'}
+                </label>
               </div>
               <textarea
-                placeholder="Describe symptoms or emergency situation"
+                placeholder={t('ambulanceRequest.symptoms') || 'Describe symptoms or emergency situation'}
                 value={formData.symptoms}
                 onChange={(e) => setFormData({...formData, symptoms: e.target.value})}
                 rows={4}
@@ -139,7 +453,9 @@ export default function SOSBookingPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <MapPin className="w-4 h-4 text-red-600" />
-                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Current Location</label>
+                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                  {t('ambulanceRequest.currentLocation') || 'Current Location'}
+                </label>
               </div>
               <div className="h-56 bg-[var(--card-bg)] rounded-xl overflow-hidden border border-[var(--border-color)] relative">
                 <SimulatedGridMap />
@@ -161,7 +477,9 @@ export default function SOSBookingPage() {
               }`}
             >
               <Activity className={`w-5 h-5 ${isSubmitting ? 'animate-spin' : ''}`} />
-              {isSubmitting ? 'DISPATCHING...' : 'Request Ambulance'}
+              {isSubmitting 
+                ? (t('ambulanceRequest.dispatching') || 'Dispatching...') 
+                : (t('ambulanceRequest.requestAmbulance') || 'Request Ambulance')}
               {!isSubmitting && <ChevronRight className="w-5 h-5" />}
             </button>
           </form>

@@ -69,18 +69,18 @@ export default function LandingPage() {
               {/* CTA Cluster */}
               <div className="flex flex-col sm:flex-row gap-6 mb-16">
                 <Link
-                  to="/ambulance-booking"
+                  to="/ambulance-request"
                   className="btn-primary group !px-12 !py-6 !text-xs"
                 >
                   <Phone className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                   INITIATE SOS PROTOCOL
                 </Link>
                 <Link
-                  to="/admin"
+                  to="/dashboard"
                   className="btn-secondary group !px-12 !py-6 !text-xs"
                 >
                   <LayoutDashboard className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                  COMMAND CENTER
+                  DASHBOARD
                 </Link>
               </div>
 
@@ -293,11 +293,11 @@ export default function LandingPage() {
               The future of emergency response is autonomous.
            </p>
            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-             <Link to="/booking" className="btn-primary !px-16 !py-8 !text-base">
+             <Link to="/ambulance-request" className="btn-primary !px-16 !py-8 !text-base">
                 INITIATE PROTOCOL
              </Link>
-             <Link to="/login/hospital" className="btn-secondary !px-16 !py-8 !text-base">
-                REGISTER HOSPITAL
+             <Link to="/hospitals" className="btn-secondary !px-16 !py-8 !text-base">
+                VIEW HOSPITALS
              </Link>
            </div>
         </div>
