@@ -5,7 +5,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-type UserRole = 'Patient' | 'Driver' | 'Hospital' | 'Admin';
+export type UserRole = 'Patient' | 'Driver' | 'Admin';
 
 interface User {
   id: string;

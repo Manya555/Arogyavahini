@@ -16,6 +16,7 @@ import BookingPage from './pages/BookingPage';
 import SOSBookingPage from './pages/SOSBookingPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import TrackingPage from './pages/TrackingPage';
+import UserProfilePage from './pages/UserProfilePage';
 import DriverDashboard from './pages/DriverDashboard';
 import HospitalListingsPage from './pages/HospitalListingsPage';
 import HospitalDetailPage from './pages/HospitalDetailPage';
@@ -143,7 +144,14 @@ export default function App() {
                        {/* Login */}
                        <Route path="/login" element={<LoginPages />} />
 
-                       {/* Driver Portal */}
+                       {/* Public User Profile - Protected */}
+                       <Route path="/profile" element={
+                         <ProtectedRoute roles={['Patient']}>
+                           <UserProfilePage />
+                         </ProtectedRoute>
+                       } />
+
+                       {/* Driver Portal - Protected */}
                        <Route path="/driver-portal" element={
                          <ProtectedRoute roles={['Driver']}>
                            <DriverDashboard />

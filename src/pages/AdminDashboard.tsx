@@ -23,7 +23,6 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/UIContext';
-import { SimulatedGridMap } from '../components/SimulatedGridMap';
 
 export default function AdminDashboard() {
   const { 
@@ -171,7 +170,24 @@ export default function AdminDashboard() {
                     exit={{ opacity: 0 }}
                     className="relative aspect-video rounded-[3rem] overflow-hidden border border-[var(--border-color)] bg-[var(--card-bg-solid)] dark:bg-black shadow-2xl"
                   >
-                     <SimulatedGridMap />
+                     <EmergencyMap 
+                       center={{ lat: 12.9716, lng: 77.5946 }}
+                       zoom={12}
+                       markers={[
+                         ...ambulances.map(amb => ({
+                           id: amb.id,
+                           coords: amb.coords,
+                           type: 'ambulance' as const,
+                           label: `${amb.name} - ${amb.status}`
+                         })),
+                         ...hospitals.map(hosp => ({
+                           id: hosp.id,
+                           coords: hosp.coords,
+                           type: 'hospital' as const,
+                           label: hosp.name
+                         }))
+                       ]}
+                     />
                   </motion.div>
                )}
 
