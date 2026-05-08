@@ -13,6 +13,7 @@ Arogyavahini is a fully open-source emergency response management system built w
 - **Framer Motion** - Smooth animations
 - **Leaflet & React-Leaflet** - Interactive maps
 
+
 The application requires no external platform dependencies and can be deployed on any standard Node.js hosting environment.
 
 ## Getting Started
