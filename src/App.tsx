@@ -17,6 +17,7 @@ import TrackingPage from './pages/TrackingPage';
 import DriverDashboard from './pages/DriverDashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
 import HospitalListingsPage from './pages/HospitalListingsPage';
+import HospitalDetailPage from './pages/HospitalDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPages from './pages/LoginPages';
 import { EmergencyStatus } from './context/SimulationContext';
@@ -89,14 +90,7 @@ const Sidebar = () => {
           })}
         </div>
   
-        <div className="flex flex-col items-center gap-6 mt-auto">
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_15px_var(--glow-emerald)]" 
-            title="System Online" 
-          />
-        </div>
+
       </div>
 
       {/* Mobile Bottom Bar */}
@@ -145,7 +139,7 @@ export default function App() {
                        <Route path="/emergency" element={<BookingPage />} />
                        <Route path="/ambulance-booking" element={<BookingPage />} />
                        <Route path="/hospitals" element={<HospitalListingsPage />} />
-                       <Route path="/hospitals/:id" element={<HospitalDashboard />} />
+                       <Route path="/hospitals/:id" element={<HospitalDetailPage />} />
                        <Route path="/tracking/:id" element={<TrackingPage />} />
                        
                        {/* Logins */}
