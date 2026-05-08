@@ -23,7 +23,8 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/UIContext';
-import { SimulatedGridMap } from '../components/SimulatedGridMap';
+import { EmergencyMap } from '../components/EmergencyMap';
+import { useGeolocation } from '../hooks/useGeolocation';
 
 export default function AdminDashboard() {
   const { 

@@ -5,6 +5,13 @@ import { useLanguage } from '../context/UIContext';
 import { motion } from 'motion/react';
 import { Heart, Mail, Lock, ChevronRight, Info } from 'lucide-react';
 
+// Demo credentials for each role
+const demoCredentials = {
+  user: { email: 'user@arogyavahini.com', password: 'user123', role: 'Patient' as const, name: 'Public User' },
+  driver: { email: 'driver@arogyavahini.com', password: 'driver123', role: 'Driver' as const, name: 'Rajesh Kumar', targetId: 'amb-1' },
+  admin: { email: 'admin@arogyavahini.com', password: 'admin123', role: 'Admin' as const, name: 'Hospital Admin' },
+};
+
 export default function LoginPages() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -15,21 +22,47 @@ export default function LoginPages() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Role-based redirect function
+  const redirectByRole = (role: string) => {
+    switch (role) {
+      case 'Patient':
+        navigate('/profile');
+        break;
+      case 'Driver':
+        navigate('/driver');
+        break;
+      case 'Admin':
+      case 'Hospital':
+        navigate('/admin');
+        break;
+      default:
+        navigate('/profile');
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Demo login - accept the demo credentials or any valid-looking input
-    if (
-      (email === 'demo@arogyavahini.com' && password === 'demo123') ||
-      (email.includes('@') && password.length >= 6)
-    ) {
+    // Check demo credentials
+    let matchedCredential = null;
+    for (const [key, cred] of Object.entries(demoCredentials)) {
+      if (email === cred.email && password === cred.password) {
+        matchedCredential = cred;
+        break;
+      }
+    }
+
+    if (matchedCredential) {
+      login(matchedCredential.role, `${matchedCredential.role.toLowerCase()}-${Date.now()}`, matchedCredential.name, matchedCredential.targetId);
+      redirectByRole(matchedCredential.role);
+    } else if (email.includes('@') && password.length >= 6) {
+      // Generic login - default to Patient role
       login('Patient', `user-${Date.now()}`, email.split('@')[0] || 'User');
-      navigate('/dashboard');
+      navigate('/profile');
     } else {
       setError('Invalid email or password. Please try again.');
     }
@@ -39,15 +72,15 @@ export default function LoginPages() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    // Simulate Google sign-in
     await new Promise(resolve => setTimeout(resolve, 1000));
     login('Patient', `google-${Date.now()}`, 'Google User');
-    navigate('/dashboard');
+    navigate('/profile');
   };
 
-  const handleDemoLogin = () => {
-    setEmail('demo@arogyavahini.com');
-    setPassword('demo123');
+  const handleDemoLogin = (role: 'user' | 'driver' | 'admin') => {
+    const cred = demoCredentials[role];
+    setEmail(cred.email);
+    setPassword(cred.password);
   };
 
   return (
@@ -79,24 +112,35 @@ export default function LoginPages() {
 
           {/* Form */}
           <form onSubmit={handleLogin} className="p-10 space-y-6">
-            {/* Demo Credentials Card */}
-            <div 
-              onClick={handleDemoLogin}
-              className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/15 transition-all"
-            >
-              <div className="flex items-start gap-3">
-                <Info className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
-                <div className="text-[10px] font-black uppercase tracking-widest leading-loose">
-                  <p className="text-emerald-600 dark:text-emerald-400 mb-1">
-                    {t('auth.demoCredentials') || 'Demo Credentials'} (Click to fill)
-                  </p>
-                  <p className="text-[var(--text-muted)]">
-                    Email: <span className="text-[var(--text-primary)] ml-1">demo@arogyavahini.com</span>
-                  </p>
-                  <p className="text-[var(--text-muted)]">
-                    Password: <span className="text-[var(--text-primary)] ml-1">demo123</span>
-                  </p>
-                </div>
+            {/* Demo Credentials Cards */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-3 flex items-center gap-2">
+                <Info className="w-3 h-3" />
+                Demo Credentials (Click to fill)
+              </p>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin('user')}
+                  className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 hover:bg-blue-500/20 transition-all text-center"
+                >
+                  <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest">Public</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin('driver')}
+                  className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 hover:bg-emerald-500/20 transition-all text-center"
+                >
+                  <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Driver</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin('admin')}
+                  className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20 hover:bg-purple-500/20 transition-all text-center"
+                >
+                  <p className="text-[9px] font-black text-purple-500 uppercase tracking-widest">Admin</p>
+                </button>
               </div>
             </div>
 

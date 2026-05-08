@@ -40,16 +40,33 @@ const createPatientIcon = (isDark: boolean) => L.divIcon({
   iconAnchor: [20, 20],
 });
 
+// User location icon with pulsing effect
+const createUserLocationIcon = (isDark: boolean) => L.divIcon({
+  className: 'custom-icon user-location-marker',
+  html: `<div class="relative">
+    <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-30"></div>
+    <div class="relative bg-blue-500 p-2 rounded-full border-2 ${isDark ? 'border-white' : 'border-white'} shadow-2xl">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+      </svg>
+    </div>
+  </div>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
 interface EmergencyMapProps {
   center?: Coordinates;
   zoom?: number;
   markers?: Array<{
     id: string;
     coords: Coordinates;
-    type: 'ambulance' | 'hospital' | 'patient';
+    type: 'ambulance' | 'hospital' | 'patient' | 'user';
     label: string;
   }>;
   route?: Coordinates[];
+  showUserLocation?: boolean;
+  userCoords?: Coordinates;
 }
 
 const ChangeMapView = ({ center }: { center: Coordinates }) => {
@@ -60,7 +77,14 @@ const ChangeMapView = ({ center }: { center: Coordinates }) => {
   return null;
 }
 
-export const EmergencyMap = ({ center = { lat: 12.9716, lng: 77.5946 }, zoom = 13, markers = [], route = [] }: EmergencyMapProps) => {
+export const EmergencyMap = ({ 
+  center = { lat: 12.9716, lng: 77.5946 }, 
+  zoom = 13, 
+  markers = [], 
+  route = [],
+  showUserLocation = false,
+  userCoords
+}: EmergencyMapProps) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -75,6 +99,16 @@ export const EmergencyMap = ({ center = { lat: 12.9716, lng: 77.5946 }, zoom = 1
       />
       <ChangeMapView center={center} />
       
+      {/* User location marker */}
+      {showUserLocation && userCoords && (
+        <Marker 
+          position={[userCoords.lat, userCoords.lng]} 
+          icon={createUserLocationIcon(isDark)}
+        >
+          <Popup>Your Location</Popup>
+        </Marker>
+      )}
+      
       {markers.map((m) => (
         <Marker 
           key={m.id} 
@@ -82,6 +116,7 @@ export const EmergencyMap = ({ center = { lat: 12.9716, lng: 77.5946 }, zoom = 1
           icon={
             m.type === 'ambulance' ? createAmbulanceIcon(isDark) : 
             m.type === 'hospital' ? createHospitalIcon(isDark) : 
+            m.type === 'user' ? createUserLocationIcon(isDark) :
             createPatientIcon(isDark)
           }
         >

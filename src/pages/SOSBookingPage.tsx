@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { 
   AlertCircle, 
   MapPin, 
@@ -13,10 +13,13 @@ import {
   Hospital,
   CheckCircle,
   Circle,
-  Navigation
+  Navigation,
+  RefreshCw,
+  Locate
 } from 'lucide-react';
-import { SimulatedGridMap } from '../components/SimulatedGridMap';
+import { EmergencyMap } from '../components/EmergencyMap';
 import { useLanguage } from '../context/UIContext';
+import { useGeolocation } from '../hooks/useGeolocation';
 
 type DriverStatus = 'pending' | 'accepted' | 'enRoute' | 'arrived';
 
@@ -33,10 +36,13 @@ interface NearbyHospital {
   distance: string;
   eta: string;
   beds: number;
+  coords: { lat: number; lng: number };
 }
 
 export default function SOSBookingPage() {
   const { t } = useLanguage();
+  const { coords, loading: locationLoading, error: locationError, permissionDenied, refreshLocation } = useGeolocation();
+  
   const [formData, setFormData] = useState({
     patientName: '',
     contactNumber: '',
@@ -54,12 +60,37 @@ export default function SOSBookingPage() {
     { id: 4, status: 'Ambulance Arrived', time: '', completed: false },
   ]);
 
-  const nearbyHospitals: NearbyHospital[] = [
-    { id: 1, name: 'City General Hospital', distance: '2.3 km', eta: '5 min', beds: 12 },
-    { id: 2, name: 'Apollo Emergency Center', distance: '3.8 km', eta: '8 min', beds: 8 },
-    { id: 3, name: 'St. Mary Medical', distance: '4.5 km', eta: '10 min', beds: 15 },
-    { id: 4, name: 'Regional Trauma Center', distance: '5.2 km', eta: '12 min', beds: 6 },
-  ];
+  // Mock ambulance location that moves towards user
+  const [ambulanceCoords, setAmbulanceCoords] = useState({ 
+    lat: coords.lat + 0.02, 
+    lng: coords.lng + 0.015 
+  });
+
+  // Nearby hospitals based on user location
+  const nearbyHospitals: NearbyHospital[] = useMemo(() => [
+    { id: 1, name: 'City General Hospital', distance: '2.3 km', eta: '5 min', beds: 12, coords: { lat: coords.lat + 0.008, lng: coords.lng + 0.005 } },
+    { id: 2, name: 'Apollo Emergency Center', distance: '3.8 km', eta: '8 min', beds: 8, coords: { lat: coords.lat - 0.01, lng: coords.lng + 0.012 } },
+    { id: 3, name: 'St. Mary Medical', distance: '4.5 km', eta: '10 min', beds: 15, coords: { lat: coords.lat + 0.015, lng: coords.lng - 0.008 } },
+    { id: 4, name: 'Regional Trauma Center', distance: '5.2 km', eta: '12 min', beds: 6, coords: { lat: coords.lat - 0.018, lng: coords.lng - 0.01 } },
+  ], [coords]);
+
+  // Simulate ambulance movement
+  useEffect(() => {
+    if (!isBooked || driverStatus === 'arrived') return;
+
+    const interval = setInterval(() => {
+      setAmbulanceCoords(prev => {
+        const stepLat = (coords.lat - prev.lat) * 0.15;
+        const stepLng = (coords.lng - prev.lng) * 0.15;
+        return {
+          lat: prev.lat + stepLat,
+          lng: prev.lng + stepLng
+        };
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isBooked, coords, driverStatus]);
 
   // Simulate driver status progression
   useEffect(() => {
@@ -73,12 +104,10 @@ export default function SOSBookingPage() {
       if (currentIndex < statusProgression.length) {
         setDriverStatus(statusProgression[currentIndex]);
         
-        // Update timeline
         setTimeline(prev => prev.map((event, idx) => 
           idx <= currentIndex ? { ...event, completed: true, time: new Date().toLocaleTimeString() } : event
         ));
         
-        // Update ETA
         setEta(prev => Math.max(0, prev - 4));
       } else {
         clearInterval(interval);
@@ -92,7 +121,6 @@ export default function SOSBookingPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     setIsSubmitting(false);
@@ -119,6 +147,26 @@ export default function SOSBookingPage() {
       case 'arrived': return t('ambulanceRequest.arrived') || 'Arrived';
     }
   };
+
+  // Map markers for tracking view
+  const trackingMarkers = useMemo(() => [
+    { id: 'user', coords: coords, type: 'user' as const, label: 'Your Location' },
+    { id: 'ambulance', coords: ambulanceCoords, type: 'ambulance' as const, label: 'Ambulance' },
+    ...nearbyHospitals.slice(0, 2).map(h => ({ 
+      id: `hospital-${h.id}`, 
+      coords: h.coords, 
+      type: 'hospital' as const, 
+      label: h.name 
+    }))
+  ], [coords, ambulanceCoords, nearbyHospitals]);
+
+  // Route from ambulance to user
+  const route = useMemo(() => {
+    if (driverStatus === 'enRoute' || driverStatus === 'accepted') {
+      return [ambulanceCoords, coords];
+    }
+    return [];
+  }, [ambulanceCoords, coords, driverStatus]);
 
   if (isBooked) {
     return (
@@ -170,26 +218,14 @@ export default function SOSBookingPage() {
                   </div>
                 </div>
                 <div className="h-80 relative">
-                  <SimulatedGridMap />
-                  <div className="absolute inset-0 pointer-events-none">
-                    {/* Ambulance marker */}
-                    <motion.div
-                      animate={{ 
-                        x: driverStatus === 'enRoute' ? [0, 20, 40] : driverStatus === 'arrived' ? 60 : 0,
-                        y: driverStatus === 'enRoute' ? [0, -10, -20] : driverStatus === 'arrived' ? -30 : 0
-                      }}
-                      transition={{ duration: 2, repeat: driverStatus === 'enRoute' ? Infinity : 0 }}
-                      className="absolute top-1/3 left-1/4"
-                    >
-                      <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-600/30">
-                        <Truck className="w-4 h-4 text-white" />
-                      </div>
-                    </motion.div>
-                    {/* User marker */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse shadow-lg shadow-blue-500/30" />
-                    </div>
-                  </div>
+                  <EmergencyMap 
+                    center={coords}
+                    zoom={14}
+                    markers={trackingMarkers}
+                    route={route}
+                    showUserLocation={true}
+                    userCoords={coords}
+                  />
                 </div>
               </motion.div>
 
@@ -230,6 +266,32 @@ export default function SOSBookingPage() {
                     {eta > 0 ? `${eta} min` : 'Arrived'}
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mt-2">Estimated arrival time</p>
+                </div>
+              </motion.div>
+
+              {/* Location Info */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="glass-panel rounded-2xl p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <span className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">Your Location</span>
+                      <p className="text-sm font-mono text-[var(--text-primary)]">
+                        {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={refreshLocation}
+                    className="p-2 rounded-lg bg-[var(--hover-bg)] hover:bg-blue-500/10 transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4 text-blue-500" />
+                  </button>
                 </div>
               </motion.div>
             </div>
@@ -449,20 +511,62 @@ export default function SOSBookingPage() {
               />
             </div>
 
-            {/* Map Preview */}
+            {/* Map Preview with Real Location */}
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <MapPin className="w-4 h-4 text-red-600" />
-                <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
-                  {t('ambulanceRequest.currentLocation') || 'Current Location'}
-                </label>
-              </div>
-              <div className="h-56 bg-[var(--card-bg)] rounded-xl overflow-hidden border border-[var(--border-color)] relative">
-                <SimulatedGridMap />
-                <div className="absolute inset-0 border-2 border-red-500/20 pointer-events-none" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-red-600" />
+                  <label className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest">
+                    {t('ambulanceRequest.currentLocation') || 'Current Location'}
+                  </label>
                 </div>
+                <button 
+                  type="button"
+                  onClick={refreshLocation}
+                  className="flex items-center gap-2 text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors"
+                >
+                  <Locate className="w-3.5 h-3.5" />
+                  Refresh
+                </button>
+              </div>
+              
+              {/* Location Status */}
+              {locationLoading && (
+                <div className="mb-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3">
+                  <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+                  <span className="text-xs text-blue-500 font-bold">Detecting your location...</span>
+                </div>
+              )}
+              
+              {permissionDenied && (
+                <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center gap-3">
+                  <AlertCircle className="w-4 h-4 text-yellow-500" />
+                  <span className="text-xs text-yellow-600 dark:text-yellow-400 font-bold">
+                    Location access denied. Using default location (Bangalore).
+                  </span>
+                </div>
+              )}
+
+              {/* Coordinates Display */}
+              <div className="mb-3 p-3 bg-[var(--hover-bg)] rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-mono text-[var(--text-muted)]">
+                    LAT: {coords.lat.toFixed(6)} | LNG: {coords.lng.toFixed(6)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="h-56 bg-[var(--card-bg)] rounded-xl overflow-hidden border border-[var(--border-color)] relative">
+                <EmergencyMap 
+                  center={coords}
+                  zoom={15}
+                  markers={[
+                    { id: 'user-location', coords: coords, type: 'user', label: 'Your Location' }
+                  ]}
+                  showUserLocation={true}
+                  userCoords={coords}
+                />
               </div>
             </div>
 

@@ -21,6 +21,7 @@ import HospitalListingsPage from './pages/HospitalListingsPage';
 import HospitalDetailPage from './pages/HospitalDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPages from './pages/LoginPages';
+import ProfilePage from './pages/ProfilePage';
 
 // Global Protected Route Helper
 const ProtectedRoute = ({ children, roles }: { children: React.ReactNode, roles: string[] }) => {
@@ -47,7 +48,9 @@ const Sidebar = () => {
     { to: "/dashboard", icon: Activity, label: 'SOS Dashboard', id: 'dashboard' },
     { to: "/live-map", icon: MapPin, label: 'Live Tracking', id: 'map' },
     { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
+    ...(user?.role === 'Patient' ? [{ to: "/profile", icon: UserCog, label: 'My Profile', id: 'profile' }] : []),
     ...(user?.role === 'Driver' ? [{ to: "/driver-portal", icon: LayoutDashboard, label: 'Driver Portal', id: 'driver' }] : []),
+    ...(user?.role === 'Admin' || user?.role === 'Hospital' ? [{ to: "/admin", icon: LayoutDashboard, label: 'Admin Portal', id: 'admin' }] : []),
   ];
 
   return (
@@ -143,6 +146,13 @@ export default function App() {
                        {/* Login */}
                        <Route path="/login" element={<LoginPages />} />
 
+                       {/* Profile - Public User */}
+                       <Route path="/profile" element={
+                         <ProtectedRoute roles={['Patient']}>
+                           <ProfilePage />
+                         </ProtectedRoute>
+                       } />
+
                        {/* Driver Portal */}
                        <Route path="/driver-portal" element={
                          <ProtectedRoute roles={['Driver']}>
@@ -150,9 +160,16 @@ export default function App() {
                          </ProtectedRoute>
                        } />
                        
+                       {/* Driver route alias */}
+                       <Route path="/driver" element={
+                         <ProtectedRoute roles={['Driver']}>
+                           <DriverDashboard />
+                         </ProtectedRoute>
+                       } />
+                       
                        {/* Admin Portal - Hidden from sidebar, protected */}
                        <Route path="/admin" element={
-                         <ProtectedRoute roles={['Admin']}>
+                         <ProtectedRoute roles={['Admin', 'Hospital']}>
                            <AdminDashboard />
                          </ProtectedRoute>
                        } />
