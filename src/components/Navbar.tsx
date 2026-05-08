@@ -233,11 +233,11 @@ export const Navbar = () => {
                   <button
                     key={role}
                     onClick={() => {
-                      login({ 
-                        id: `user-${Date.now()}`,
-                        name: `${role} User`,
-                        role: role as any
-                      });
+                      login(
+                        role as any,
+                        `user-${Date.now()}`,
+                        `${role} User`
+                      );
                       setIsLoginOpen(false);
                     }}
                     className={`w-full py-4 rounded-xl font-black uppercase tracking-widest text-white transition-all border-2 ${
