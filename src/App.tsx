@@ -8,14 +8,18 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation 
 import { SimulationProvider } from './context/SimulationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider, LanguageProvider, useLanguage, useTheme } from './context/UIContext';
-import { Heart, Activity, ShieldCheck, MapPin, Truck, Hospital, UserCog, LogOut, Bell, Menu, X, Globe, Moon, Sun, TrendingUp, LayoutDashboard } from 'lucide-react';
+import { Home, Activity, ShieldCheck, MapPin, Truck, Hospital, UserCog, LogOut, Bell, Menu, X, Globe, Moon, Sun, TrendingUp, LayoutDashboard, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import BookingPage from './pages/BookingPage';
+import SOSBookingPage from './pages/SOSBookingPage';
+import UserDashboardPage from './pages/UserDashboardPage';
 import TrackingPage from './pages/TrackingPage';
 import DriverDashboard from './pages/DriverDashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
+import HospitalListingsPage from './pages/HospitalListingsPage';
+import HospitalDetailPage from './pages/HospitalDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPages from './pages/LoginPages';
 import { EmergencyStatus } from './context/SimulationContext';
@@ -41,23 +45,12 @@ const Sidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  const getDashboardPath = () => {
-    if (!user) return "/";
-    if (user.role === 'Admin') return "/admin";
-    if (user.role === 'Driver') return "/driver";
-    if (user.role === 'Hospital') return "/hospital";
-    return "/";
-  };
-
   const navItems = [
-    { to: getDashboardPath(), icon: TrendingUp, label: 'Analytical Graph', id: 'analytics' },
-    { to: "/booking", icon: Bell, label: 'Notifications Hub', id: 'notifications' },
-    { 
-      to: user?.role === 'Admin' ? "/admin" : "/internal/admin-login", 
-      icon: ShieldCheck, 
-      label: 'System Status', 
-      id: 'system' 
-    },
+    { to: "/user-dashboard", icon: Home, label: 'Dashboard', id: 'dashboard' },
+    { to: "/sos-booking", icon: AlertCircle, label: 'SOS Emergency', id: 'sos' },
+    { to: "/live-map", icon: MapPin, label: 'Live Tracking', id: 'map' },
+    { to: "/hospitals", icon: Hospital, label: 'Hospitals', id: 'hospitals' },
+    ...(user?.role === 'Driver' ? [{ to: "/driver-portal", icon: LayoutDashboard, label: 'Driver Portal', id: 'driver' }] : []),
   ];
 
   return (
@@ -65,14 +58,12 @@ const Sidebar = () => {
       {/* Desktop Sidebar */}
       <div className="fixed left-0 top-0 bottom-0 w-20 bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] z-[60] hidden lg:flex flex-col items-center py-10 gap-12">
         <Link to="/" className="w-12 h-12 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/25 group transition-all hover:bg-red-600/15">
-          <div className="w-3 h-3 bg-red-600 rounded-full animate-ping group-hover:scale-150 transition-transform" />
+          <Home className="w-6 h-6 text-red-600" />
         </Link>
         
         <div className="flex-1 flex flex-col items-center gap-10">
           {navItems.map((item) => {
-            const dashboardPaths = ['/admin', '/driver', '/hospital'];
-            const isActive = location.pathname === item.to || 
-              (item.id === 'analytics' && dashboardPaths.includes(location.pathname));
+            const isActive = location.pathname === item.to;
               
             return (
               <Link 
@@ -100,24 +91,12 @@ const Sidebar = () => {
             );
           })}
         </div>
-  
-        <div className="flex flex-col items-center gap-6 mt-auto">
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_15px_var(--glow-emerald)]" 
-            title="System Online" 
-          />
-          <div className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest vertical-text py-6 select-none opacity-40">AXON_SECURE_NODE</div>
-        </div>
       </div>
 
       {/* Mobile Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-[var(--sidebar-bg)]/85 border-t border-[var(--border-color)] z-[60] flex items-center justify-around px-4 backdrop-blur-xl">
         {navItems.map((item) => {
-          const dashboardPaths = ['/admin', '/driver', '/hospital'];
-          const isActive = location.pathname === item.to || 
-            (item.id === 'analytics' && dashboardPaths.includes(location.pathname));
+          const isActive = location.pathname === item.to;
             
           return (
             <Link 
@@ -154,10 +133,15 @@ export default function App() {
 
                 <div className="flex-1 lg:ml-20">
                    <Navbar />
-                   <main className="pt-24 pb-24 lg:pb-12 px-4 lg:px-0">
+                   <main className="pt-20 pb-28 lg:pb-12 px-4 lg:px-0">
                      <Routes>
                        <Route path="/" element={<LandingPage />} />
-                       <Route path="/booking" element={<BookingPage />} />
+                       <Route path="/user-dashboard" element={<UserDashboardPage />} />
+                       <Route path="/sos-booking" element={<SOSBookingPage />} />
+                       <Route path="/live-map" element={<BookingPage />} />
+                       <Route path="/ambulance-booking" element={<BookingPage />} />
+                       <Route path="/hospitals" element={<HospitalListingsPage />} />
+                       <Route path="/hospitals/:id" element={<HospitalDetailPage />} />
                        <Route path="/tracking/:id" element={<TrackingPage />} />
                        
                        {/* Logins */}
@@ -165,17 +149,14 @@ export default function App() {
                        <Route path="/internal/hospital-login" element={<LoginPages type="hospital" />} />
                        <Route path="/internal/admin-login" element={<LoginPages type="admin" />} />
 
-                       {/* Dashboards */}
-                       <Route path="/driver" element={
+                       {/* Driver Portal */}
+                       <Route path="/driver-portal" element={
                          <ProtectedRoute roles={['Driver']}>
                            <DriverDashboard />
                          </ProtectedRoute>
                        } />
-                       <Route path="/hospital" element={
-                         <ProtectedRoute roles={['Hospital']}>
-                           <HospitalDashboard />
-                         </ProtectedRoute>
-                       } />
+                       
+                       {/* Admin Portal - Hidden from sidebar, protected */}
                        <Route path="/admin" element={
                          <ProtectedRoute roles={['Admin']}>
                            <AdminDashboard />
